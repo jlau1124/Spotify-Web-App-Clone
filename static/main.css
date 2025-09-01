@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* Hide scrollbar but allow scrolling */
+.album-scroll::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.song-scroll::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+/* For the currently playing song */
+.song-item.playing {
+    background-color: rgba(29, 185, 84, 0.1); 
+    color: #1DB954;
+}
+
+/* Progress bar improvements */
+#progress-container:hover #progress-bar {
+    background-color: #1DB954; 
+}
+
+#volume-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #1DB954;
+    cursor: pointer;
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #1DB954;
+    cursor: pointer;
+    border: none;
+}
+
+#context-menu {
+    z-index: 10000 !important; 
+    opacity: 1 !important;
+    display: block !important;
+    background: #282828 !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+#context-menu {
+    z-index: 10000 !important;
+}
+
+/* styling for side bar scroll bar*/
+/* Custom scrollbar for playlists */
+#playlists-container {
+    scrollbar-width: thin;
+    scrollbar-color: #535353 #121212;
+}
+
+#playlists-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+#playlists-container::-webkit-scrollbar-track {
+    background: #121212;
+    border-radius: 6px;
+}
+
+#playlists-container::-webkit-scrollbar-thumb {
+    background: #535353;
+    border-radius: 6px;
+    border: 3px solid #121212;
+}
+
+#playlists-container::-webkit-scrollbar-thumb:hover {
+    background: #727272;
+}
+

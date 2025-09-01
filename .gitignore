@@ -1,0 +1,16 @@
+# Python virtual environment
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Sensitive environment variables
+.env
+
+# Node modules (if you used Node/Tailwind)
+node_modules/
+
+
+#optional
+package-lock.json

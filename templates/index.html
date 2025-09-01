@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spotify Clone - Music Player</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/Spotify_icon.svg.png') }}">
+    <link href="{{ url_for('static', filename='output.css') }}" rel="stylesheet">
+    <style>
+        html, body {
+            overflow: hidden;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<!-- =========================
+     MAIN APP CONTAINER
+========================= -->
+<div class="h-screen bg-black flex flex-col">
+
+    <!-- =========================
+         SIDEBAR + MAIN CONTENT
+    ========================= -->
+    <div class="flex flex-1 h-full">
+
+        <!-- =========================
+             SIDEBAR
+        ========================= -->
+        <div class="w-[25%] h-full p-2 flex-col gap-2 text-white flex"> 
+
+            <!-- Home & Search -->
+            <div class="bg-[#121212] h-[15%] rounded flex flex-col justify-around" onclick="goToHome()">
+                <div id="nav-home" class="flex items-center gap-3 pl-8 cursor-pointer nav-item" data-page="home">
+                    <img class="w-6" src="{{  url_for('static', filename='assets/home.png') }}" alt="Home Icon"/>
+                    <p class="font-bold">Home</p>
+                </div>
+                <div id="nav-search" class="flex items-center gap-3 pl-8 cursor-pointer" data-page-="search">
+                    <img class="w-6" src="{{  url_for('static', filename='assets/search.png') }}" alt="Search Icon"/>
+                    <p class="font-bold">Search</p>
+                </div>
+            </div>
+
+            <!-- Library -->
+            <div class="bg-[#121212] h-[85%] rounded">
+                <div class="p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <img class="w-8" src="{{  url_for('static', filename='assets/stack.png') }}" alt="Stack Icon"/>
+                        <p class="font-semibold">Your Library</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <img class="w-5" src="{{ url_for('static', filename='assets/arrow.png') }}" alt="Arrow Icon"/>
+                        <img class="w-5 cursor-pointer" src="{{ url_for('static', filename='assets/plus.png') }}" alt="Plus Icon" onclick="showCreatePlaylistModal()"/>
+                    </div>
+                </div>
+
+                <!-- Playlists Container -->
+                <div id="playlists-container" class="flex-1 overflow-y-auto p-4 space-y-2" style="max-height: calc(100vh - 200px)">
+                </div>
+
+                <!-- Create Playlist Section -->
+                <div class="p-4 bg-[#242424] m-2 rounded font-semibold flex flex-col items-start justify-start gap-1 pl-4">
+                    <h1>Create your first playlist</h1>
+                    <p class="font-light">It's easy we will help you</p>
+                    <button class="px-4 py-1.5 bg-white text-[15px] text-black rounded-full mt-4" onclick="showCreatePlaylistModal()">Create Playlist</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- =========================
+             MAIN CONTENT AREA
+        ========================= -->
+        <div class="flex-1 w-[100%] pt-4 bg-[#121212] text-white">
+
+            <!-- Top Navigation -->
+            <div class="w-full flex justify-between items-center font-semibold">
+                <div class="flex items-center gap-2">
+                    <img class="w-8 bg-black p-2 rounded-2xl cursor-pointer" src="{{ url_for('static', filename='assets/left_arrow.png') }}"  onclick="(goBackToMain)" alt="Left Arrow Icon">
+                    <img class="w-8 bg-black p-2 rounded-2xl cursor-pointer" src="{{ url_for('static', filename='assets/right_arrow.png') }}" onclick="(goForward)" alt="Right Arrow Icon">
+                </div>
+                <div class="flex items-center gap-4">
+                    <p class="bg-white text-black text-[15px] px-4 py-1 rounded-2xl hidden md:block cursor-pointer">Explore Premium</p>
+                    <p class="bg-black py-1 px-3 rounded-2xl text-[15px] cursor-pointer">Install App</p>
+                    <p class="bg-blue-500 text-black w-7 h-7 rounded-full flex items-center justify-center">J</p>
+                </div>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="flex items-center gap-2 mt-4">
+                <p class="bg-white text-black px-4 py-1 rounded-2xl cursor-pointer">All</p>
+                <p class="bg-black px-4 py-1 rounded-2xl cursor-pointer">Music</p>
+                <p class="bg-black px-4 py-1 rounded-2xl cursor-pointer">Podcasts</p>
+            </div>
+
+            <!-- Content Wrapper with Scroll -->
+            <div class="h-[78vh] overflow-y-auto">
+                <div class="my-5 font-bold text-2xl">
+                    <div class="mb-4"></div>
+                    <div id="main-content" class="flex flex-col gap-6">
+
+                        <!-- Featured Charts -->
+                        <h1 class="my-5 font-bold text-2xl">Featured Charts</h1>
+                        <div class="overflow-x-auto album-scroll w-full">
+                            <div class="grid grid-flow-col auto-cols-min gap-4 p-4">
+                                {% for album in albums %}
+                                    <div class="min-w-[180px] p-2 px-3 rounded cursor-pointer hover:bg-white album-card" onclick="loadAlbumContent('{{ album.id }}')" data-album-id="{{ album.id }}">
+                                        <img class="rounded" src="{{ url_for('static', filename='assets/' ~ album.image) }}" alt="{{ album.name }}">
+                                        <p class="font-bold mt-2 mb-1">{{ album.name }}</p>
+                                        <p class="text-slate-200 text-sm">{{ album.desc }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Today's Biggest Hits -->
+                        <h1 class="my-5 font-bold text-2xl">Today's Biggest Hits</h1>
+                        <div class="overflow-x-auto song-scroll">
+                            <div class="grid grid-flow-col auto-cols-min gap-4 p-4">
+                                {% for song in songs %}
+                                    <div id="song-{{ song.id }}" class="min-w-[180px] p-2 px-3 rounded cursor-pointer hover:bg-white" onclick="playSongById('{{ song.id }}')" data-song-id="{{ song.id }}">
+                                        <img class="rounded" src="{{ url_for('static', filename=song.image) }}" alt="{{ song.name }}">
+                                        <p class="font-bold mt-2 mb-1">{{ song.name }}</p>
+                                        <p class="text-slate-200 text-sm">{{ song.desc }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- End Sidebar + Main Content -->
+
+    <!-- =========================
+         MUSIC PLAYER
+    ========================= -->
+    <div class="h-[10%] bg-black flex justify-between items-center text-white px-4">
+        <div class="flex items-center gap-4">
+            <img id="current-song-image" class="w-12" src="{{ url_for('static', filename=song.image) }}" alt="{{ song.name }}">
+            <div>
+                <p id="current-song-name">{{ song.name}}</p>
+                <p id="current-song-desc">{{ song.desc[:11]}}</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center gap-1 m-auto">
+            <div class="flex gap-4">
+                <img class="w-4 cursor-pointer" src="{{ url_for('static', filename='assets/shuffle.png') }}" alt="Shuffle Icon"/>
+                <img class="w-4 cursor-pointer" src="{{ url_for('static', filename='assets/prev.png') }}" alt="Prev Icon" onclick="playPreviousSong()"/>
+                <img id="play-button"class="w-4 cursor-pointer" src="{{ url_for('static', filename='assets/play.png') }}" alt="Play Icon" onclick="playSong()"/>
+                <img id="pause-button" class="w-4 cursor-pointer" src="{{ url_for('static', filename='assets/pause.png') }}" alt="Pause Icon" onclick="pauseSong()"/>
+                <img class="w-4 cursor-pointer" src="{{ url_for('static', filename='assets/next.png') }}" alt="Next Icon" onclick="playNextSong()"/>
+                <img class="w-4 cursor-pointer" src="{{ url_for('static', filename='assets/loop.png') }}" alt="Loop Icon"/>
+            </div>
+            <div class="flex items-center gap-5">
+                <p id="current-time">0:00</p>
+                <div id="progress-container" class="w-[60vw] max-w-[500px] bg-gray-300 rounded-full cursor-pointer" onclick="seekSong(event)">
+                    <div id="progress-bar" class="h-1 border-none w-0 bg-green-800 rounded-full"></div>
+                </div>
+                <p id="total-time">0:00</p>
+            </div>
+        </div>
+
+        <div class="hidden lg:flex items-center gap-2 opacity-75">
+            <img class="w-4" src="{{ url_for('static', filename='assets/plays.png') }}" alt="Plays Icon">
+            <img class="w-4" src="{{ url_for('static', filename='assets/mic.png') }}" alt="Mic Icon">
+            <div class="flex items-center gap-1 mr-2">
+                <img class="w-4" src="{{ url_for('static', filename='assets/queue.png') }}" alt="Queue Icon">
+                <span id="queue-count" class="text-xs">0</span>
+            </div>
+            <img class="w-4" src="{{ url_for('static', filename='assets/speaker.png') }}" alt="Speaker Icon">
+            <img class="w-4" src="{{ url_for('static', filename='assets/volume.png') }}" alt="Volume Icon">
+            <input type="range" min="0" max="1" step="0.01" value="1" id="volume-slider" class="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+            <img class="w-4" src="{{ url_for('static', filename='assets/mini-player.png') }}" alt="Mini Player Icon">
+        </div>
+    </div>
+
+    <!-- =========================
+         AUDIO ELEMENT
+    ========================= -->
+    <audio id="audio-player" preload="auto" style="display: none;"></audio>
+
+    <!-- =========================
+         CREATE PLAYLIST MODAL
+    ========================= -->
+    <div id="create-playlist-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-[#282828] p-6 rounded-lg w-80">
+            <h2 class="text-xl font-bold mb-4">Create Playlist</h2>
+            <input type="text" id="playlist-name" placeholder="Playlist name" class="w-full bg-[#3e3e3e] text-white px-4 py-2 rounded mb-4">
+            <div class="flex gap-3 justify-end">
+                <button onclick="hideCreatePlaylistModal()" class="px-4 py-2 bg-[#3e3e3e] rounded hover:bg-[#4a4a4a]">Cancel</button>
+                <button onclick="createPlaylist()" class="px-4 py-2 bg-green-600 rounded hover:bg-green-700">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================
+         DELETE PLAYLIST MODAL
+    ========================= -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-[#282828] p-6 rounded-lg w-96">
+            <h2 class="text-xl font-bold mb-4 text-white">Delete from Library?</h2>
+            <p class="text-gray-400 mb-4" id="delete-message">This will delete from Your Library.</p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="hideDeleteModal()" class="px-6 py-2 bg-transparent text-white rounded hover:bg-[#3e3e3e]">Cancel</button>
+                <button onclick="confirmDelete()" class="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+            </div>
+        </div>
+    </div>
+
+</div> <!-- End Main App Container -->
+
+<script>
+/* ========================
+   SPOTIFY CLONE - MAIN JS
+   Organized with Section Comments
+ ======================== */
+
+// ===== GLOBAL VARIABLES & INITIALIZATION =====
+const AppState = {
+    userPlaylists: window.userPlaylists || [],
+    currentSongIndex: 0,
+    isPlaying: false,
+    currentPage: 'home',
+    songQueue: [],
+    currentQueueIndex: 0,
+    playlistToDelete: null,
+    BASE_URL: "{{ url_for('static', filename='') }}",
+    albumsData: JSON.parse('{{ albums_data | tojson | safe }}'),
+    songsData: JSON.parse('{{ songs_data | default([]) | tojson | safe }}')
+};
+
+// DOM Elements
+const audioPlayer = document.getElementById('audio-player');
+const volumeSlider = document.getElementById('volume-slider');
+
+// ===== MAIN INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM fully loaded, initializing app...");
+    
+    initializeApp();
+    UI.setupImageErrorHandling(); // Fixed: Use UI.setupImageErrorHandling()
+});
+
+function initializeApp() {
+    StorageManager.loadFromStorage();
+    AudioPlayer.initialize();
+    Navigation.setup();
+    SongInteractions.setup();
+    ContextMenu.setup();
+    VolumeControl.setup();
+    UI.renderInitial();
+    Navigation.updateActiveNav();
+    
+    // Fix image paths immediately and repeatedly
+    UI.fixAllBrokenImagePaths();
+    setTimeout(UI.fixAllBrokenImagePaths, 100);
+    setTimeout(UI.fixAllBrokenImagePaths, 500);
+    setTimeout(UI.fixAllBrokenImagePaths, 1000);
+    setTimeout(UI.fixAllBrokenImagePaths, 2000);
+}
+
+// ===== STORAGE MANAGEMENT MODULE =====
+const StorageManager = {
+    loadFromStorage() {
+        const storedPlaylists = localStorage.getItem('playlists');
+        if (storedPlaylists) {
+            try {
+                AppState.userPlaylists = JSON.parse(storedPlaylists);
+                console.log("Loaded playlists from storage:", AppState.userPlaylists);
+                this.fixBrokenPlaylistImages();
+            } catch (error) {
+                console.error("Error loading playlists:", error);
+                AppState.userPlaylists = [];
+            }
+        }
+    },
+    
+    fixBrokenPlaylistImages() {
+        if (!AppState.userPlaylists || !AppState.userPlaylists.length) return;
+        
+        let fixedCount = 0;
+        const fixedImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzM0MzQzNCIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSI0MCIgZmlsbD0iIzUxNTE1MSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIxNiIgZmlsbD0iIzM0MzQzNCIvPjxyZWN0IHg9IjYwIiB5PSIxMzAiIHdpZHRoPSI4MCIgaGVpZ2h0PSIyMCIgcng9IjEwIiByeT0iMTAiIGZpbGw9IiM1MTUxNTEiLz48L3N2Zz4=';
+        
+        AppState.userPlaylists.forEach(playlist => {
+            if (playlist.image && playlist.image.includes('playlist-placeholder.jpg')) {
+                playlist.image = fixedImage;
+                fixedCount++;
+            }
+        });
+        
+        if (fixedCount > 0) {
+            console.log(`Fixed ${fixedCount} playlists with broken images`);
+            this.savePlaylists();
+        }
+    },
+    
+    savePlaylists() {
+        localStorage.setItem('playlists', JSON.stringify(AppState.userPlaylists));
+    }
+};
+
+// ===== AUDIO PLAYER MODULE =====
+const AudioPlayer = {
+    initialize() {
+        if (AppState.songsData.length > 0) {
+            const firstSong = AppState.songsData[0];
+            audioPlayer.src = AppState.BASE_URL + firstSong.file;
+            this.setCurrentSong(firstSong);
+            this.updatePlayButton();
+        }
+        this.setupEvents();
+    },
+    
+    setupEvents() {
+        audioPlayer.addEventListener('timeupdate', this.updateTimeDisplay);
+        audioPlayer.addEventListener('loadedmetadata', this.updateTimeDisplay);
+        audioPlayer.addEventListener('ended', this.handleSongEnd);
+    },
+    
+    play() {
+        if (audioPlayer.src) {
+            audioPlayer.play();
+            AppState.isPlaying = true;
+            this.updatePlayButton();
+        }
+    },
+    
+    pause() {
+        audioPlayer.pause();
+        AppState.isPlaying = false;
+        this.updatePlayButton();
+    },
+    
+    updatePlayButton() {
+        const playBtn = document.getElementById('play-button');
+        const pauseBtn = document.getElementById('pause-button');
+        
+        if (playBtn && pauseBtn) {
+            if (AppState.isPlaying) {
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'block';
+            } else {
+                playBtn.style.display = 'block';
+                pauseBtn.style.display = 'none';
+            }
+        }
+    },
+    
+    formatTime(seconds) {
+        if (isNaN(seconds)) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    },
+    
+    updateTimeDisplay() {
+        const currentTimeElem = document.getElementById('current-time');
+        const totalTimeElem = document.getElementById('total-time');
+        const progressBar = document.getElementById('progress-bar');
+        
+        if (currentTimeElem) currentTimeElem.textContent = AudioPlayer.formatTime(audioPlayer.currentTime);
+        if (totalTimeElem) totalTimeElem.textContent = AudioPlayer.formatTime(audioPlayer.duration);
+        
+        if (progressBar && audioPlayer.duration > 0) {
+            const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.style.width = progressPercent + '%';
+        }
+    },
+    
+    seekSong(e) {
+        const progressContainer = document.getElementById('progress-container');
+        if (progressContainer && audioPlayer.duration > 0) {
+            const clickX = e.offsetX;
+            const containerWidth = progressContainer.offsetWidth;
+            const seekPercentage = clickX / containerWidth;
+            audioPlayer.currentTime = seekPercentage * audioPlayer.duration;
+            AudioPlayer.updateTimeDisplay();
+        }
+    },
+    
+    handleSongEnd() {
+        AppState.isPlaying = false;
+        AudioPlayer.updatePlayButton();
+        AudioPlayer.playNextSong();
+    },
+    
+    setCurrentSong(song) {
+        AppState.currentSong = song;
+        document.getElementById('current-song-name').textContent = song.name;
+        document.getElementById('current-song-desc').textContent = song.desc;
+        document.getElementById('current-song-image').src = AppState.BASE_URL + song.image;
+        AppState.currentSongIndex = AppState.songsData.findIndex(s => s.id === song.id);
+    },
+    
+    async playPreviousSong() {
+        if (AppState.currentSongIndex > 0) {
+            AppState.currentSongIndex--;
+            const song = AppState.songsData[AppState.currentSongIndex];
+            audioPlayer.src = AppState.BASE_URL + song.file;
+            await audioPlayer.play();
+            this.setCurrentSong(song);
+            AppState.isPlaying = true;
+            this.updatePlayButton();
+        }
+    },
+    
+    async playNextSong() {
+        if (AppState.currentSongIndex < AppState.songsData.length - 1) {
+            AppState.currentSongIndex++;
+            const song = AppState.songsData[AppState.currentSongIndex];
+            audioPlayer.src = AppState.BASE_URL + song.file;
+            await audioPlayer.play();
+            this.setCurrentSong(song);
+            AppState.isPlaying = true;
+            this.updatePlayButton();
+        }
+    },
+    
+    playSongById(id) {
+        const songId = typeof id === 'string' ? parseInt(id) : id;
+        const song = AppState.songsData.find(s => s.id === songId);
+        
+        if (song) {
+            this.setCurrentSong(song);
+            audioPlayer.src = AppState.BASE_URL + song.file;
+            audioPlayer.play().then(() => {
+                AppState.isPlaying = true;
+                this.updatePlayButton();
+            }).catch(error => {
+                console.error("Playback error:", error);
+            });
+        } else {
+            console.error("Song not found:", id);
+        }
+    }
+};
+
+// ===== VOLUME CONTROL MODULE =====
+const VolumeControl = {
+    setup() {
+        if (volumeSlider) {
+            audioPlayer.volume = 1;
+            volumeSlider.addEventListener('input', function() {
+                audioPlayer.volume = this.value;
+            });
+        }
+    }
+};
+
+// ===== NAVIGATION MODULE =====
+const Navigation = {
+    setup() {
+        // Arrow navigation
+        const leftArrow = document.querySelector('img[alt="Left Arrow Icon"]');
+        const rightArrow = document.querySelector('img[alt="Right Arrow Icon"]');
+        if (leftArrow) leftArrow.onclick = this.goBackToMain;
+        if (rightArrow) rightArrow.onclick = this.goForward;
+        
+        // Sidebar navigation
+        document.getElementById('nav-home')?.addEventListener('click', () => {
+            if (AppState.currentPage !== 'home') this.loadPage('home');
+        });
+        document.getElementById('nav-search')?.addEventListener('click', () => {
+            if (AppState.currentPage !== 'search') this.loadPage('search');
+        });
+    },
+    
+    goToHome() {
+        if (AppState.currentPage === 'home' && window.location.pathname === '/') {
+            window.scrollTo(0, 0);
+            return;
+        }
+        
+        history.pushState({ page: 'home' }, '', '/');
+        AppState.currentPage = 'home';
+        
+        const mainContent = document.getElementById('main-content');
+        
+        // Generate album HTML
+        let albumHTML = '';
+        AppState.albumsData.forEach(album => {
+            const albumImagePath = `assets/${album.image}`;
+            const albumImageSrc = AppState.BASE_URL.endsWith('static/') 
+                ? `${AppState.BASE_URL}${albumImagePath}`
+                : `${AppState.BASE_URL}/assets/${album.image}`;
+                
+            albumHTML += `
+                <div class="min-w-[180px] p-2 px-3 rounded cursor-pointer hover:bg-white album-card" 
+                     data-album-id="${album.id}">
+                    <img class="rounded" src="${albumImageSrc}" alt="${album.name}">
+                    <p class="font-bold mt-2 mb-1">${album.name}</p>
+                    <p class="text-slate-200 text-sm">${album.desc}</p>
+                </div>
+            `;
+        });
+        
+        // Generate song HTML
+        let songHTML = '';
+        AppState.songsData.forEach(song => {
+            let songImageSrc;
+            if (song.image.startsWith('http') || song.image.startsWith('/')) {
+                songImageSrc = song.image;
+            } else if (AppState.BASE_URL.endsWith('static/')) {
+                songImageSrc = `${AppState.BASE_URL}${song.image}`;
+            } else {
+                songImageSrc = `${AppState.BASE_URL}/${song.image}`;
+            }
+                
+            songHTML += `
+                <div id="song-${song.id}" class="min-w-[180px] p-2 px-3 rounded cursor-pointer hover:bg-white" 
+                     data-song-id="${song.id}">
+                    <img class="rounded" src="${songImageSrc}" alt="${song.name}">
+                    <p class="font-bold mt-2 mb-1">${song.name}</p>
+                    <p class="text-slate-200 text-sm">${song.desc}</p>
+                </div>
+            `;
+        });
+        
+        // Update content
+        mainContent.innerHTML = `
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 p-6">
+                ${albumHTML}
+                ${songHTML}
+            </div>
+        `;
+        
+        this.updateActiveNav();
+        
+        setTimeout(() => {
+            SongInteractions.setup();
+        }, 100);
+    },
+    
+    goBackToMain() {
+        if (window.location.pathname.startsWith('/album/')) {
+            if (history.length > 1) {
+                history.back();
+            } else {
+                window.location.href = '/';
+            }
+        } else {
+            window.location.href = '/';
+        }
+    },
+    
+    goForward() {
+        history.forward();
+    },
+    
+    loadPage(pageName) {
+        try {
+            let url;
+            if (pageName === 'search') {
+                url = '/page/search';
+            } else {
+                url = `/page/${pageName}`;
+            }
+            
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('main-content').innerHTML = html;
+                AppState.currentPage = pageName;
+                this.updateActiveNav();
+                history.pushState({ page: pageName }, '', `/${pageName}`);
+                
+                // Ensure consistent layout for search page
+                if (pageName === 'search') {
+                    setTimeout(() => {
+                        SongInteractions.setup();
+                        UI.fixAllBrokenImagePaths();
+                    }, 100);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading page:', error);
+                // Fallback to home page if search fails
+                if (pageName === 'search') {
+                    this.goToHome();
+                }
+            });
+        } catch (error) {
+            console.error('Error loading page:', error);
+        }
+    },
+    
+    updateActiveNav() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        const activeNav = document.getElementById(`nav-${AppState.currentPage}`);
+        if (activeNav) {
+            activeNav.classList.add('active');
+        }
+    },
+    
+    loadAlbumContent(albumId) {
+        const id = typeof albumId === 'string' ? parseInt(albumId) : albumId;
+        console.log('Loading album content for ID:', id, 'Type:', typeof id);
+        
+        // Check if album exists in our data
+        const album = AppState.albumsData.find(a => a.id === id);
+        console.log('Found album:', album);
+        
+        if (!album) {
+            console.error('Album not found with ID:', id);
+            console.log('Available albums:', AppState.albumsData.map(a => ({id: a.id, name: a.name})));
+            return;
+        }
+        
+        fetch(`/album/${id}/content`)
+        .then(response => {
+            console.log('Album content response status:', response.status);
+            return response.text();
+        })
+        .then(html => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Fix all image paths in the loaded content
+            const images = tempDiv.querySelectorAll('img');
+            images.forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+                    const cleanedSrc = UI.cleanImagePath(AppState.BASE_URL + src);
+                    img.src = cleanedSrc;
+                    console.log('Fixed album content image:', src, '→', cleanedSrc);
+                }
+            });
+            
+            document.getElementById('main-content').innerHTML = tempDiv.innerHTML;
+            history.pushState({albumId: id}, '', `/album/${id}`);
+            AlbumManager.applyAlbumBackground(id);
+            
+            setTimeout(() => {
+                SongInteractions.setup();
+                UI.fixAllBrokenImagePaths();
+            }, 100);
+        })
+        .catch(error => {
+            console.error('Error loading album content:', error);
+        });
+    }
+};
+
+// ===== ALBUM MANAGEMENT MODULE =====
+const AlbumManager = {
+    applyAlbumBackground(albumId) {
+        const album = AppState.albumsData.find(a => a.id === parseInt(albumId));
+        const mainContent = document.getElementById('main-content');
+        
+        if (album && album.bgColor && mainContent) {
+            mainContent.style.background = '';
+            
+            let albumHeader = document.querySelector('.album-header');
+            if (!albumHeader) {
+                const firstChild = mainContent.firstElementChild;
+                if (firstChild && firstChild.classList.contains('bg-gradient-to-b')) {
+                    albumHeader = firstChild;
+                }
+            }
+            
+            if (albumHeader) {
+                albumHeader.style.background = `linear-gradient(${album.bgColor}, #121212)`;
+            }
+        }
+    }
+};
+
+// ===== PLAYLIST MANAGEMENT MODULE =====
+const PlaylistManager = {
+    showCreateModal() {
+        document.getElementById('create-playlist-modal').classList.remove('hidden');
+    },
+    
+    hideCreateModal() {
+        document.getElementById('create-playlist-modal').classList.add('hidden');
+    },
+    
+    createPlaylist() {
+        const nameInput = document.getElementById('playlist-name');
+        const name = nameInput.value.trim();
+        
+        if (name) {
+            const newPlaylist = {
+                id: Date.now(),
+                name: name,
+                songs: [],
+                created: new Date().toISOString(),
+                image: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzM0MzQzNCIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSI0MCIgZmlsbD0iIzUxNTE1MSIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSIxNiIgZmlsbD0iIzM0MzQzNCIvPjxyZWN0IHg9IjYwIiB5PSIxMzAiIHdpZHRoPSI4MCIgaGVpZ2h0PSIyMCIgcng9IjEwIiByeT0iMTAiIGZpbGw9IiM1MTUxNTEiLz48L3N2Zz4='
+            };
+            
+            if (!AppState.userPlaylists) AppState.userPlaylists = [];
+            AppState.userPlaylists.push(newPlaylist);
+            StorageManager.savePlaylists();
+            this.renderPlaylists();
+            this.hideCreateModal();
+            nameInput.value = '';
+        }
+    },
+    
+    renderPlaylists() {
+        const container = document.getElementById('playlists-container');
+        if (!container) return;
+        
+        if (!AppState.userPlaylists || AppState.userPlaylists.length === 0) {
+            container.innerHTML = `
+                <div class="text-gray-400 text-center py-4">
+                    <p>No playlists yet. Create your first one!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="grid grid-cols-1 gap-2">
+                ${AppState.userPlaylists.map(playlist => `
+                    <div class="flex items-center justify-between p-3 bg-[#242424] rounded hover:bg-[#2a2a2a] group">
+                        <div class="flex items-center gap-3 flex-1 cursor-pointer" onclick="PlaylistManager.viewPlaylist(${playlist.id})">
+                            <div class="w-12 h-12 rounded flex items-center justify-center overflow-hidden" 
+                                 style="background: linear-gradient(135deg, #343434, #515151);">
+                                ${playlist.image && !playlist.image.includes('placeholder') ? `
+                                    <img src="${playlist.image}" alt="${playlist.name}" 
+                                         onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=\\'text-gray-300 text-2xl\\'>🎵</span>';">
+                                ` : `
+                                    <span class="text-gray-300 text-2xl">🎵</span>
+                                `}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-semibold text-white truncate">${playlist.name}</p>
+                                <p class="text-sm text-gray-400">${playlist.songs.length} songs</p>
+                            </div>
+                        </div>
+                        <button class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white p-2"
+                                onclick="event.stopPropagation(); PlaylistManager.showDeleteModal(${playlist.id})">
+                            🗑️
+                        </button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    },
+    
+    viewPlaylist(playlistId) {
+        const id = typeof playlistId === 'string' ? parseInt(playlistId) : playlistId;
+        const playlist = AppState.userPlaylists.find(p => p.id === id);
+        
+        if (!playlist) {
+            alert("Playlist not found!");
+            Navigation.goToHome();
+            return;
+        }
+
+        const totalDuration = this.calculatePlaylistDuration(playlist);
+        
+        const playlistHTML = `
+            <div class="bg-gradient-to-b from-[#2a2a2a] to-[#181818] min-h-screen p-6">
+                <div class="flex items-end gap-6 mb-8">
+                    <img src="${playlist.image}" class="w-60 h-60 rounded shadow-2xl" alt="${playlist.name}">
+                    <div class="flex flex-col">
+                        <p class="text-xs font-bold uppercase mb-2">Playlist</p>
+                        <h1 class="text-8xl font-black mb-6">${playlist.name}</h1>
+                        <p class="text-gray-400 text-sm">${playlist.songs.length} songs, ${totalDuration}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-transparent to-[#181818] h-32 relative -top-16"></div>
+                
+                <div class="relative -top-16">
+                    <div class="flex items-center gap-4 mb-8">
+                        <button class="bg-[#1db954] rounded-full p-4 hover:scale-105 transition">
+                            <img src="{{ url_for('static', filename='assets/play.png') }}" class="w-8 h-8" alt="Play">
+                        </button>
+                        <button class="text-gray-400 hover:text-white text-2xl" title="Like">
+                            ♡
+                        </button>
+                        <button class="text-gray-400 hover:text-white text-xl font-bold" title="More options">
+                            ⋮
+                        </button>
+                    </div>
+                    
+                    <table class="w-full text-gray-400">
+                        <thead>
+                            <tr class="border-b border-gray-800">
+                                <th class="text-left py-3 text-sm">#</th>
+                                <th class="text-left py-3 text-sm">Title</th>
+                                <th class="text-left py-3 text-sm">Album</th>
+                                <th class="text-left py-3 text-sm">Date Added</th>
+                                <th class="text-left py-3 text-sm">
+                                    <img src="{{ url_for('static', filename='assets/clock_icon.png') }}" 
+                                    class="w-4 h-4 inline-block" alt="Duration">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${playlist.songs.length > 0 ? playlist.songs.map((song, index) => `
+                                <tr class="hover:bg-[#2a2a2a] group">
+                                    <td class="py-3 px-2">${index + 1}</td>
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-3">
+                                            <img src="{{ url_for('static', filename='') }}${song.image}" class="w-10 h-10" alt="${song.name}">
+                                            <div>
+                                                <p class="text-white">${song.name}</p>
+                                                <p class="text-sm">${song.artist || 'Unknown Artist'}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">${song.album || 'Unknown Album'}</td>
+                                    <td class="py-3">${this.formatDate(playlist.created)}</td>
+                                    <td class="py-3">${song.duration || '3:00'}</td>
+                                </tr>
+                            `).join('') : `
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center">
+                                        <p class="text-gray-500 mb-4">This playlist is empty</p>
+                                        <button onclick="Navigation.goToHome()" class="px-4 py-2 bg-white text-black rounded-full">
+                                            Find songs
+                                        </button>
+                                    </td>
+                                </tr>
+                            `}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('main-content').innerHTML = playlistHTML;
+        history.pushState({ playlistId: id }, '', `/playlist/${id}`);
+    },
+    
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    },
+    
+    calculatePlaylistDuration(playlist) {
+        const totalMinutes = playlist.songs.length * 3;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
+    },
+    
+    editPlaylist(playlistId) {
+        const playlist = AppState.userPlaylists.find(p => p.id === playlistId);
+        if (!playlist) return;
+        
+        const newName = prompt("Edit playlist name:", playlist.name);
+        if (newName && newName.trim() !== "") {
+            playlist.name = newName.trim();
+            StorageManager.savePlaylists();
+            this.renderPlaylists();
+        }
+    },
+    
+    showDeleteModal(playlistId) {
+        const playlist = AppState.userPlaylists.find(p => p.id === playlistId);
+        if (!playlist) return;
+        
+        AppState.playlistToDelete = playlistId;
+        document.getElementById('delete-message').textContent = 
+            `This will delete "${playlist.name}" from Your Library.`;
+        document.getElementById('delete-modal').classList.remove('hidden');
+    },
+    
+    hideDeleteModal() {
+        AppState.playlistToDelete = null;
+        document.getElementById('delete-modal').classList.add('hidden');
+    },
+    
+    confirmDelete() {
+        if (AppState.playlistToDelete !== null) {
+            AppState.userPlaylists = AppState.userPlaylists.filter(p => p.id !== AppState.playlistToDelete);
+            StorageManager.savePlaylists();
+            this.renderPlaylists();
+            this.hideDeleteModal();
+            Navigation.goToHome();
+        }
+    }
+};
+
+// ===== CONTEXT MENU MODULE =====
+const ContextMenu = {
+    setup() {
+        document.body.addEventListener('contextmenu', function(e) {
+            if (e.target.id === 'main-content' || e.target.classList.contains('grid')) {
+                ContextMenu.remove();
+                return;
+            }
+            
+            const songElement = e.target.closest('[data-song-id]');
+            const albumElement = e.target.closest('[data-album-id]');
+            
+            if (songElement) {
+                e.preventDefault();
+                const songId = songElement.getAttribute('data-song-id');
+                ContextMenu.showSongOptions(e, songId, 'song');
+                return;
+            }
+            
+            if (albumElement) {
+                e.preventDefault();
+                const albumId = albumElement.getAttribute('data-album-id');
+                ContextMenu.showSongOptions(e, albumId, 'album');
+                return;
+            }
+            
+            ContextMenu.remove();
+        });
+    },
+    
+    showSongOptions(event, itemId, type) {
+        event.preventDefault();
+        this.remove();
+        
+        const menu = document.createElement('div');
+        menu.id = 'context-menu';
+        menu.className = 'fixed bg-[#282828] p-2 rounded shadow-lg z-50';
+        menu.style.left = `${event.pageX}px`;
+        menu.style.top = `${event.pageY}px`;
+        
+        if (type === 'song') {
+            menu.innerHTML = `
+                <div class="p-2 hover:bg-[#3e3e3e] cursor-pointer" 
+                     onclick="PlaylistManager.addSongToPlaylist(${itemId}); ContextMenu.remove()">Add to Playlist</div>
+                <div class="p-2 hover:bg-[#3e3e3e] cursor-pointer" 
+                     onclick="AudioPlayer.playSongById(${itemId}, true); ContextMenu.remove()">Play Next</div>
+            `;
+        } else if (type === 'album') {
+            menu.innerHTML = `
+                <div class="p-2 hover:bg-[#3e3e3e] cursor-pointer" 
+                     onclick="Navigation.loadAlbumContent(${itemId}); ContextMenu.remove()">Open Album</div>
+            `;
+        }
+        
+        document.body.appendChild(menu);
+        setTimeout(() => {
+            document.addEventListener('click', ContextMenu.remove);
+        }, 100);
+    },
+    
+    remove() {
+        const menu = document.getElementById('context-menu');
+        if (menu) {
+            menu.style.opacity = '0';
+            menu.style.transition = 'opacity 0.2s ease';
+            setTimeout(() => {
+                if (menu.parentElement) {
+                    document.body.removeChild(menu);
+                }
+            }, 200);
+        }
+        document.removeEventListener('click', this.remove);
+    }
+};
+
+// ===== SONG INTERACTIONS MODULE =====
+const SongInteractions = {
+    setup() {
+        console.log("Setting up song interactions...");
+        
+        // Song click listeners
+        const songItems = document.querySelectorAll('.song-item');
+        console.log("Found song items:", songItems.length);
+
+        songItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const rawData = item.getAttribute('data-song-data');
+                console.log("Raw song data:", rawData);
+                
+                try {
+                    const songData = JSON.parse(rawData.replace(/&quot;/g, '"'));
+                    const songUrl = item.getAttribute('data-song-url');
+                    console.log("Playing song URL:", songUrl);
+
+                    audioPlayer.src = songUrl;
+                    audioPlayer.play();
+
+                    document.getElementById('current-song-name').textContent = songData.name;
+                    document.getElementById('current-song-desc').textContent = songData.desc;
+
+                    const songImageSrc = AppState.BASE_URL.endsWith('static/') 
+                        ? `${AppState.BASE_URL}${songData.image}`
+                        : `${AppState.BASE_URL}/${songData.image}`;
+                    document.getElementById('current-song-image').src = AppState.BASE_URL + songData.image;
+
+                    AppState.isPlaying = true;
+                    AudioPlayer.updatePlayButton();
+                } catch (error) {
+                    console.error("Error parsing song data:", error);
+                }
+            });
+        });
+        
+        // Album card listeners
+        const albumCards = document.querySelectorAll('.album-card');
+        console.log("Found album cards:", albumCards.length);
+        albumCards.forEach(card => {
+            const albumId = card.getAttribute('data-album-id');
+            console.log("Album card ID:", albumId);
+            if (albumId) {
+                card.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("Album card clicked, ID:", albumId);
+                    Navigation.loadAlbumContent(albumId);
+                });
+            }
+        });
+        
+        // Event delegation for dynamic content
+        document.addEventListener('click', function(e) {
+            const songElement = e.target.closest('[data-song-id]');
+            if (songElement && !e.target.onclick) {
+                const songId = songElement.getAttribute('data-song-id');
+                console.log("Delegated song click:", songId);
+                // Convert to integer and validate
+                const parsedSongId = parseInt(songId);
+                if (!isNaN(parsedSongId) && parsedSongId !== undefined) {
+                    AudioPlayer.playSongById(parsedSongId);
+                } else {
+                    console.error("Invalid song ID:", songId);
+                }
+            }
+            
+            const albumElement = e.target.closest('[data-album-id]');
+            if (albumElement && !e.target.onclick) {
+                const albumId = albumElement.getAttribute('data-album-id');
+                console.log("Delegated album click:", albumId);
+                const parsedAlbumId = parseInt(albumId);
+                if (!isNaN(parsedAlbumId) && parsedAlbumId !== undefined) {
+                    Navigation.loadAlbumContent(parsedAlbumId);
+                } else {
+                    console.error("Invalid album ID:", albumId);
+                }
+            }
+        });
+        
+        console.log("Song interactions setup complete");
+    }
+};
+
+// ===== UI UTILITIES MODULE =====
+const UI = {
+    renderInitial() {
+        Navigation.updateActiveNav();
+        PlaylistManager.renderPlaylists();
+    },
+    
+    setupImageErrorHandling() {
+        // Create a more aggressive image path interceptor
+        this.interceptImagePaths();
+        
+        const images = document.querySelectorAll('img');
+        images.forEach(img => {
+            if (img.tagName === 'IMG') {
+                this.setupImageErrorHandler(img);
+            }
+        });
+        
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1 && node.tagName === 'IMG') {
+                        this.fixImagePath(node);
+                        this.setupImageErrorHandler(node);
+                    } else if (node.nodeType === 1 && node.querySelectorAll) {
+                        const newImages = node.querySelectorAll('img');
+                        newImages.forEach(img => {
+                            if (img.tagName === 'IMG') {
+                                this.fixImagePath(img);
+                                this.setupImageErrorHandler(img);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    },
+    
+    interceptImagePaths() {
+        // Override the Image constructor to fix paths before they load
+        const originalImage = window.Image;
+        window.Image = function(width, height) {
+            const img = new originalImage(width, height);
+            const originalSetSrc = img.setAttribute;
+            img.setAttribute = function(name, value) {
+                if (name === 'src') {
+                    value = UI.cleanImagePath(value);
+                }
+                return originalSetSrc.call(this, name, value);
+            };
+            
+            Object.defineProperty(img, 'src', {
+                get: function() { return this.getAttribute('src'); },
+                set: function(value) { 
+                    this.setAttribute('src', UI.cleanImagePath(value));
+                }
+            });
+            
+            return img;
+        };
+    },
+    
+    cleanImagePath(path) {
+        if (!path) return path;
+        
+        // Fix double /static/ paths
+        if (path.includes('/static//static/')) {
+            return path.replace('/static//static/', '/static/');
+        }
+        // Fix /static/static/ paths  
+        if (path.includes('/static/static/')) {
+            return path.replace('/static/static/', '/static/');
+        }
+        // Fix staticassets/ paths
+        if (path.includes('staticassets/')) {
+            return path.replace('staticassets/', 'static/assets/');
+        }
+        
+        return path;
+    },
+    
+    fixImagePath(img) {
+        if (img.src) {
+            const cleanedSrc = this.cleanImagePath(img.src);
+            if (cleanedSrc !== img.src) {
+                img.src = cleanedSrc;
+                console.log('Pre-fixed image path:', img.src, '→', cleanedSrc);
+            }
+        }
+        
+        // Also check the src attribute
+        const srcAttr = img.getAttribute('src');
+        if (srcAttr) {
+            const cleanedAttr = this.cleanImagePath(srcAttr);
+            if (cleanedAttr !== srcAttr) {
+                img.setAttribute('src', cleanedAttr);
+                console.log('Pre-fixed src attribute:', srcAttr, '→', cleanedAttr);
+            }
+        }
+    },
+    
+    setupImageErrorHandler(img) {
+        if (img._errorHandlerSet) return;
+        
+        Object.defineProperty(img, '_errorHandlerSet', {
+            value: true,
+            writable: false
+        });
+        
+        img.onerror = function() {
+            console.log('Image failed to load:', this.src);
+            this.style.opacity = '0.3';
+            
+            if (this.alt && !this.nextElementSibling?.classList?.contains('image-alt-fallback')) {
+                const fallback = document.createElement('span');
+                fallback.className = 'image-alt-fallback';
+                fallback.textContent = this.alt;
+                fallback.style.marginLeft = '8px';
+                fallback.style.color = '#999';
+                fallback.style.fontSize = '12px';
+                this.parentNode.insertBefore(fallback, this.nextSibling);
+            }
+        };
+    },
+    
+    fixAllBrokenImagePaths() {
+        console.log('Fixing broken image paths...');
+        
+        document.querySelectorAll('img').forEach(img => {
+            const originalSrc = img.src;
+            
+            // Fix double /static/ paths
+            if (originalSrc.includes('/static//static/')) {
+                img.src = originalSrc.replace('/static//static/', '/static/');
+                console.log('Fixed double static path:', originalSrc, '→', img.src);
+            }
+            // Fix /static/static/ paths  
+            else if (originalSrc.includes('/static/static/')) {
+                img.src = originalSrc.replace('/static/static/', '/static/');
+                console.log('Fixed static/static path:', originalSrc, '→', img.src);
+            }
+            // Fix staticassets/ paths
+            else if (originalSrc.includes('staticassets/')) {
+                img.src = originalSrc.replace('staticassets/', 'static/assets/');
+                console.log('Fixed missing slash:', originalSrc, '→', img.src);
+            }
+        });
+        
+        // Also fix any src attributes in the DOM that haven't been loaded yet
+        document.querySelectorAll('img[src*="/static/static/"]').forEach(img => {
+            const newSrc = img.src.replace('/static/static/', '/static/');
+            img.setAttribute('src', newSrc);
+            console.log('Fixed DOM src attribute:', img.src, '→', newSrc);
+        });
+    }
+};
+
+// ===== DEBUG FUNCTIONS =====
+const Debug = {
+    playlists() {
+        console.log("userPlaylists:", AppState.userPlaylists);
+        console.log("LocalStorage:", localStorage.getItem('playlists'));
+    },
+    
+    audio() {
+        console.log("Audio state:", {
+            currentTime: audioPlayer.currentTime,
+            duration: audioPlayer.duration,
+            paused: audioPlayer.paused,
+            src: audioPlayer.src
+        });
+    }
+};
+
+// ===== WINDOW EVENT LISTENERS =====
+window.addEventListener('load', function() {
+    const path = window.location.pathname;
+    const albumMatch = path.match(/^\/album\/(\d+)$/);
+    if (albumMatch) {
+        Navigation.loadAlbumContent(albumMatch[1]);
+    }
+});
+
+window.onpopstate = function(event) {
+    if (event.state && event.state.albumId !== undefined) {
+        Navigation.loadAlbumContent(event.state.albumId);
+    } else {
+        window.location.href = '/';
+    }
+};
+
+window.addEventListener('popstate', function(event) {
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+        Navigation.goToHome();
+    } else if (event.state && event.state.albumId !== undefined) {
+        Navigation.loadAlbumContent(event.state.albumId);
+    } else if (event.state && event.state.playlistId !== undefined) {
+        PlaylistManager.viewPlaylist(event.state.playlistId);
+    }
+});
+
+// ===== GLOBAL FUNCTION EXPORTS =====
+// Fixed: Create a global playSong function that calls AudioPlayer.playSongById
+window.playSong = AudioPlayer.playSongById.bind(AudioPlayer);
+window.playSongById = AudioPlayer.playSongById.bind(AudioPlayer);
+window.goToHome = Navigation.goToHome.bind(Navigation); // Added missing goToHome function
+window.showCreatePlaylistModal = PlaylistManager.showCreateModal;
+window.hideCreatePlaylistModal = PlaylistManager.hideCreateModal;
+window.createPlaylist = PlaylistManager.createPlaylist;
+window.showDeleteModal = PlaylistManager.showDeleteModal;
+window.hideDeleteModal = PlaylistManager.hideDeleteModal;
+window.confirmDelete = PlaylistManager.confirmDelete;
+window.editPlaylist = PlaylistManager.editPlaylist;
+window.viewPlaylist = PlaylistManager.viewPlaylist;
+window.playNextSong = AudioPlayer.playNextSong.bind(AudioPlayer);
+window.playPreviousSong = AudioPlayer.playPreviousSong.bind(AudioPlayer);
+window.seekSong = AudioPlayer.seekSong.bind(AudioPlayer);
+window.goBackToMain = Navigation.goBackToMain;
+window.goForward = Navigation.goForward;
+window.loadPage = Navigation.loadPage;
+window.debugPlaylists = Debug.playlists;
+window.debugAudio = Debug.audio;
+window.loadAlbumContent = Navigation.loadAlbumContent;
+</script>
+</body>
+</html>

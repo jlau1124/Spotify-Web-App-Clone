@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login with Spotify</title>
+</head>
+<body>
+    <h1>Welcome to My Spotify Clone</h1>
+    <p>Click below to log in with Spotify:</p>
+    
+    <!-- This link goes to your /login route in Flask -->
+    <a href="{{ url_for('login') }}">
+        <button>Log in with Spotify</button>
+    </a>
+</body>
+</html>

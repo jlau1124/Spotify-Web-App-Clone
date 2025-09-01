@@ -1,0 +1,30 @@
+<!-- Search Form -->
+<form method="POST" action="{{ url_for('search') }}" id="search-form" class="relative mb-6">
+    <input type="text" name="search_term" placeholder="What do you want to listen to?" 
+           class="w-full bg-[#242424] text-white px-4 py-3 rounded-full pl-10">
+    <img class="absolute left-3 top-3.5 w-4" src="{{ url_for('static', filename='assets/search.png') }}">
+</form>
+
+<!-- Results Area -->
+<div id="search-results">
+    {% if results %}
+        <h2 class="text-xl font-semibold mb-3">Results:</h2>
+        <div class="space-y-3">
+            {% for track in results %}
+            <div class="p-3 bg-[#242424] rounded cursor-pointer" onclick="playSearchResult('{{ track.track_name }}', '{{ track.artist_name }}')">
+                <p class="font-bold">{{ track.track_name }}</p>
+                <p class="text-gray-400">{{ track.artist_name }} • {{ track.album_name }}</p>
+                {% if track.preview_url %}
+                <audio controls class="w-full mt-2">
+                    <source src="{{ track.preview_url }}" type="audio/mpeg">
+                </audio>
+                {% else %}
+                <p class="text-gray-500 text-sm mt-2">No preview available</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-400 text-center mt-10">Search for songs, artists, or albums</p>
+    {% endif %}
+</div>

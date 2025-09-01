@@ -1,0 +1,38 @@
+<div class="mt-10 flex gap-8 flex-col md:flex-row md:items-end" id="album-header">
+    <img class=" w-48 rounded" src="{{ url_for('static', filename='assets/' ~ album.image) }}" alt="{{ album.name }}">
+    <div class="flex flex-col">
+        <p class="font-normal">Playlist</p>
+        <h2 class="text-5xl font-bold mb-4 md:text-7xl">{{ album.name }}</h2>
+        <h4 class="font-normal">{{ album.desc }}</h4>
+        <p class="mt-1">
+            <img class="inline-block w-5" src="{{ url_for('static', filename='assets/spotify_logo.png') }}" alt="Spotify logo">
+            <b>Spotify</b>
+            • <span class="font-normal">1,323,154 likes</span>
+            • <b class="font-normal">50 songs,</b>
+            <span class="font-normal">about 2 hr 30 min</span>
+        </p>
+    </div>
+</div>
+<div class="grid grid-cols-3 sm: grid-cols-4 mt-10 mb-4 pl-2 text-[#a7a7a7]">
+    <p class="font-normal"><b class="mr-4 ">#</b>Title</p>
+    <p class="font-normal">Album</p>
+    <p class="hidden sm:block font-normal">Date Added</p>
+    <img class="m-auto w-4" src="{{ url_for('static', filename='assets/clock_icon.png') }}" alt="Clock Icon">
+</div>
+<hr />
+{% for song in songs %}
+{% set song_url = url_for('static', filename=song.file) %}
+{% set song_json = song | tojson %}
+<div class="grid grid-cols-3 sm:grid-cols-4 gap-2 p-2 items-center text-[#a7a7a7] hover:bg-[#ffffff2b] cursor-pointer song-item"
+    onclick="playSongById('{{ song.id }}')">
+    <p class="text-white">
+        <b class="font-normal mr-4 text-[#a7a7a7]">{{ loop.index }}</b>
+        <img class="inline w-10 mr-5" src="{{ url_for('static', filename=song.image) }}" alt="{{ song.name }}">
+        <b class="font-normal"> {{song.name}}</b>
+    </p>
+    <p class="text-[15px]">{{ album_name }}</p>
+    <p class="text-[15px] hidden sm:block">5 days ago</p>
+    <p class="text-[15px] text-center"> {{ song.duration }}</p>
+</div>
+{% endfor %}
+

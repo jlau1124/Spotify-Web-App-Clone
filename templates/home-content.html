@@ -1,0 +1,30 @@
+<!-- Home page content without layout -->
+<div class="my-5 font-bold text-2xl">
+    <div class="mb-4"></div>
+    <h1 class="my-5 font-bold text-2xl">Featured Charts</h1>
+    <div class="overflow-x-auto album-scroll w-full">
+        <div class="grid grid-flow-col auto-cols-min gap-4 p-4">
+            {% for album in albums %}
+            <div class="min-w-[180px] p-2 px-3 rounded cursor-pointer hover:bg-white" onclick="loadAlbumContent('{{ album.id }}')">
+                <img class="rounded" src="{{ url_for('static', filename='assets/' ~ album.image) }}" alt="{{ album.name }}">
+                <p class="font-bold mt-2 mb-1">{{ album.name }}</p>
+                <p class="text-slate-200 text-sm">{{ album.desc }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mb-4"></div>
+        <h1 class="my-5 font-bold text-2xl">Today's Biggest Hits</h1>
+        <div class="overflow-x-auto song-scroll">
+            <div class="grid grid-flow-col auto-cols-min gap-4 p-4">
+                {% for song in songs %}
+                <div class="min-w-[180px] p-2 px-3 rounded cursor-pointer hover:bg-white" onclick="playSongById('{{ song.id }}')">
+                    <img class="rounded" src="{{ url_for('static', filename=song.image) }}" alt="{{ song.name }}">
+                    <p class="font-bold mt-2 mb-1">{{ song.name }}</p>
+                    <p class="text-slate-200 text-sm">{{ song.desc }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
